@@ -1,427 +1,500 @@
 #include <iostream>
-
 using namespace std;
 
-template<typename T, int N>
-class Vector
-{
+template <typename T>
+class Vector {
 private:
-    T data[N];
+    T* data;
+    int size;
 
 public:
 
-    // Конструктор по умолчанию
-    Vector()
-    {
-        for (int i = 0; i < N; i++)
-        {
-            data[i] = T();
-        }
+    Vector();
+
+    Vector(const Vector<T>& other);
+
+    Vector(int n, T value);
+
+    template <typename U>
+    Vector(const Vector<U>& other);
+
+    ~Vector();
+
+    int getSize() const;
+
+    T& operator[](int index);
+
+    const T& operator[](int index) const;
+
+    void print() const;
+
+    void input();
+
+    template <typename U>
+    auto operator+(U value) const;
+
+    template <typename U>
+    auto operator-(U value) const;
+
+    template <typename U>
+    auto operator*(U value) const;
+
+    template <typename U>
+    auto operator/(U value) const;
+
+    template <typename U>
+    auto operator+(const Vector<U>& other) const;
+
+    template <typename U>
+    auto operator-(const Vector<U>& other) const;
+
+    template <typename U>
+    auto operator*(const Vector<U>& other) const;
+
+    template <typename U>
+    auto operator/(const Vector<U>& other) const;
+
+    template <int NewSize>
+    Vector<T> resize() const;
+
+    template <typename NewType>
+    Vector<NewType> convert() const;
+
+    template <int Start, int End>
+    Vector<T> slice() const;
+
+    template <typename U, typename A, typename B>
+    static auto weightedSum(
+        const Vector<T>& v1,
+        A a,
+        const Vector<U>& v2,
+        B b
+    );
+
+    template <typename U>
+    auto concat(const Vector<U>& other) const;
+};
+
+
+
+// ===== Реалізація =====
+
+template <typename T>
+Vector<T>::Vector() {
+    size = 0;
+    data = nullptr;
+}
+
+template <typename T>
+Vector<T>::Vector(const Vector<T>& other) {
+
+    size = other.size;
+
+    data = new T[size];
+
+    for (int i = 0; i < size; i++) {
+        data[i] = other.data[i];
+    }
+}
+
+template <typename T>
+Vector<T>::Vector(int n, T value) {
+
+    size = n;
+
+    data = new T[size];
+
+    for (int i = 0; i < size; i++) {
+        data[i] = value;
+    }
+}
+
+template <typename T>
+template <typename U>
+Vector<T>::Vector(const Vector<U>& other) {
+
+    size = other.getSize();
+
+    data = new T[size];
+
+    for (int i = 0; i < size; i++) {
+        data[i] = static_cast<T>(other[i]);
+    }
+}
+
+template <typename T>
+Vector<T>::~Vector() {
+    delete[] data;
+}
+
+template <typename T>
+int Vector<T>::getSize() const {
+    return size;
+}
+
+template <typename T>
+T& Vector<T>::operator[](int index) {
+
+    if (index < 0) {
+        index = size + index;
     }
 
-    // Конструктор заполнения одним значением
-    Vector(T value)
-    {
-        for (int i = 0; i < N; i++)
-        {
-            data[i] = value;
-        }
+    return data[index];
+}
+
+template <typename T>
+const T& Vector<T>::operator[](int index) const {
+
+    if (index < 0) {
+        index = size + index;
     }
 
-    // Конструктор копирования
-    Vector(const Vector<T, N>& other)
-    {
-        for (int i = 0; i < N; i++)
-        {
-            data[i] = other[i];
-        }
+    return data[index];
+}
+
+template <typename T>
+void Vector<T>::print() const {
+
+    cout << "[ ";
+
+    for (int i = 0; i < size; i++) {
+        cout << data[i] << " ";
     }
 
-    // Конструктор преобразования типа
-    template<typename U>
-    Vector(const Vector<U, N>& other)
-    {
-        for (int i = 0; i < N; i++)
-        {
-            data[i] = static_cast<T>(other[i]);
-        }
+    cout << "]" << endl;
+}
+
+template <typename T>
+void Vector<T>::input() {
+
+    for (int i = 0; i < size; i++) {
+        cout << "Element " << i << ": ";
+        cin >> data[i];
+    }
+}
+
+
+
+// ===== Операції зі скаляром =====
+
+template <typename T>
+template <typename U>
+auto Vector<T>::operator+(U value) const {
+
+    Vector<decltype(T() + U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] + value;
     }
 
-    // Ввод элементов
-    void input()
-    {
-        cout << "Enter " << N << " elements:" << endl;
+    return result;
+}
 
-        for (int i = 0; i < N; i++)
-        {
-            cin >> data[i];
-        }
+template <typename T>
+template <typename U>
+auto Vector<T>::operator-(U value) const {
+
+    Vector<decltype(T() - U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] - value;
     }
 
-    // Доступ по индексу
-    T& operator[](int index)
-    {
-        if (index < 0)
-        {
-            index = N + index;
-        }
+    return result;
+}
 
-        return data[index];
+template <typename T>
+template <typename U>
+auto Vector<T>::operator*(U value) const {
+
+    Vector<decltype(T() * U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] * value;
     }
 
-    // Доступ по индексу (const)
-    const T& operator[](int index) const
-    {
-        if (index < 0)
-        {
-            index = N + index;
-        }
+    return result;
+}
 
-        return data[index];
+template <typename T>
+template <typename U>
+auto Vector<T>::operator/(U value) const {
+
+    Vector<decltype(T() / U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] / value;
     }
 
-    // Размер вектора
-    int size() const
-    {
-        return N;
+    return result;
+}
+
+
+
+// ===== Операції з вектором =====
+
+template <typename T>
+template <typename U>
+auto Vector<T>::operator+(const Vector<U>& other) const {
+
+    Vector<decltype(T() + U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] + other[i];
     }
 
-    // Вывод вектора
-    void print() const
-    {
-        cout << "[ ";
+    return result;
+}
 
-        for (int i = 0; i < N; i++)
-        {
-            cout << data[i] << " ";
-        }
+template <typename T>
+template <typename U>
+auto Vector<T>::operator-(const Vector<U>& other) const {
 
-        cout << "]" << endl;
+    Vector<decltype(T() - U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] - other[i];
     }
 
-    // resize
-    template<int NewSize>
-    Vector<T, NewSize> resize() const
-    {
-        Vector<T, NewSize> result;
+    return result;
+}
 
-        int minSize;
+template <typename T>
+template <typename U>
+auto Vector<T>::operator*(const Vector<U>& other) const {
 
-        if (N < NewSize)
-        {
-            minSize = N;
-        }
-        else
-        {
-            minSize = NewSize;
-        }
+    Vector<decltype(T() * U())> result(size, 0);
 
-        for (int i = 0; i < minSize; i++)
-        {
-            result[i] = data[i];
-        }
-
-        return result;
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] * other[i];
     }
 
-    // convert
-    template<typename NewType>
-    Vector<NewType, N> convert() const
-    {
-        Vector<NewType, N> result;
+    return result;
+}
 
-        for (int i = 0; i < N; i++)
-        {
-            result[i] = static_cast<NewType>(data[i]);
-        }
+template <typename T>
+template <typename U>
+auto Vector<T>::operator/(const Vector<U>& other) const {
 
-        return result;
+    Vector<decltype(T() / U())> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i] / other[i];
     }
 
-    // slice
-    template<int Start, int End>
-    auto slice() const
-    {
-        constexpr int realStart =
-            (Start < 0) ? N + Start : Start;
+    return result;
+}
 
-        constexpr int realEnd =
-            (End < 0) ? N + End : End;
 
-        constexpr int step =
-            (realStart <= realEnd) ? 1 : -1;
 
-        constexpr int newSize =
-            (realStart <= realEnd)
-            ? (realEnd - realStart + 1)
-            : (realStart - realEnd + 1);
+// ===== resize =====
 
-        Vector<T, newSize> result;
+template <typename T>
+template <int NewSize>
+Vector<T> Vector<T>::resize() const {
+
+    Vector<T> result(NewSize, T());
+
+    int limit = (size < NewSize) ? size : NewSize;
+
+    for (int i = 0; i < limit; i++) {
+        result[i] = data[i];
+    }
+
+    return result;
+}
+
+
+
+// ===== convert =====
+
+template <typename T>
+template <typename NewType>
+Vector<NewType> Vector<T>::convert() const {
+
+    Vector<NewType> result(size, NewType());
+
+    for (int i = 0; i < size; i++) {
+        result[i] = static_cast<NewType>(data[i]);
+    }
+
+    return result;
+}
+
+
+
+// ===== slice =====
+
+template <typename T>
+template <int Start, int End>
+Vector<T> Vector<T>::slice() const {
+
+    int start = Start;
+    int end = End;
+
+    if (start < 0) {
+        start = size + start;
+    }
+
+    if (end < 0) {
+        end = size + end;
+    }
+
+    if (start <= end) {
+
+        int newSize = end - start + 1;
+
+        Vector<T> result(newSize, T());
 
         int j = 0;
 
-        for (
-            int i = realStart;
-            (step == 1) ? (i <= realEnd) : (i >= realEnd);
-            i += step
-        )
-        {
-            result[j] = data[i];
-            j++;
+        for (int i = start; i <= end; i++) {
+            result[j++] = data[i];
         }
 
         return result;
     }
-};
+    else {
 
-// Сложение векторов
-template<typename T1, typename T2, int N>
-auto operator+(const Vector<T1, N>& a,
-               const Vector<T2, N>& b)
-{
-    using ResultType = decltype(T1() + T2());
+        int newSize = start - end + 1;
 
-    Vector<ResultType, N> result;
+        Vector<T> result(newSize, T());
 
-    for (int i = 0; i < N; i++)
-    {
-        result[i] = a[i] + b[i];
+        int j = 0;
+
+        for (int i = start; i >= end; i--) {
+            result[j++] = data[i];
+        }
+
+        return result;
+    }
+}
+
+
+
+// ===== weightedSum =====
+
+template <typename T>
+template <typename U, typename A, typename B>
+auto Vector<T>::weightedSum(
+    const Vector<T>& v1,
+    A a,
+    const Vector<U>& v2,
+    B b
+) {
+
+    using ResultType = decltype(a * v1[0] + b * v2[0]);
+
+    int size = v1.getSize();
+
+    Vector<ResultType> result(size, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = a * v1[i] + b * v2[i];
     }
 
     return result;
 }
 
-// Вычитание векторов
-template<typename T1, typename T2, int N>
-auto operator-(const Vector<T1, N>& a,
-               const Vector<T2, N>& b)
-{
-    using ResultType = decltype(T1() - T2());
 
-    Vector<ResultType, N> result;
 
-    for (int i = 0; i < N; i++)
-    {
-        result[i] = a[i] - b[i];
+// ===== concat =====
+
+template <typename T>
+template <typename U>
+auto Vector<T>::concat(const Vector<U>& other) const {
+
+    using ResultType = decltype(T() + U());
+
+    int newSize = size + other.getSize();
+
+    Vector<ResultType> result(newSize, 0);
+
+    for (int i = 0; i < size; i++) {
+        result[i] = data[i];
+    }
+
+    for (int i = 0; i < other.getSize(); i++) {
+        result[size + i] = other[i];
     }
 
     return result;
 }
 
-// Умножение вектора на число
-template<typename T, typename U, int N>
-auto operator*(const Vector<T, N>& v, U value)
-{
-    using ResultType = decltype(T() * U());
 
-    Vector<ResultType, N> result;
 
-    for (int i = 0; i < N; i++)
-    {
-        result[i] = v[i] * value;
-    }
+// ===== main =====
 
-    return result;
-}
+int main() {
 
-// Деление вектора на число
-template<typename T, typename U, int N>
-auto operator/(const Vector<T, N>& v, U value)
-{
-    using ResultType = decltype(T() / U());
+    int n;
 
-    Vector<ResultType, N> result;
+    cout << "Enter vector size: ";
+    cin >> n;
 
-    for (int i = 0; i < N; i++)
-    {
-        result[i] = v[i] / value;
-    }
+    Vector<int> v1(n, 0);
 
-    return result;
-}
-
-// Поэлементное умножение
-template<typename T1, typename T2, int N>
-auto operator*(const Vector<T1, N>& a,
-               const Vector<T2, N>& b)
-{
-    using ResultType = decltype(T1() * T2());
-
-    Vector<ResultType, N> result;
-
-    for (int i = 0; i < N; i++)
-    {
-        result[i] = a[i] * b[i];
-    }
-
-    return result;
-}
-
-// Поэлементное деление
-template<typename T1, typename T2, int N>
-auto operator/(const Vector<T1, N>& a,
-               const Vector<T2, N>& b)
-{
-    using ResultType = decltype(T1() / T2());
-
-    Vector<ResultType, N> result;
-
-    for (int i = 0; i < N; i++)
-    {
-        result[i] = a[i] / b[i];
-    }
-
-    return result;
-}
-
-// weighted_sum
-template<typename T1, typename T2,
-         typename A, typename B,
-         int N>
-auto weighted_sum(const Vector<T1, N>& v1,
-                  A alpha,
-                  const Vector<T2, N>& v2,
-                  B beta)
-{
-    using ResultType =
-        decltype(alpha * v1[0] + beta * v2[0]);
-
-    Vector<ResultType, N> result;
-
-    for (int i = 0; i < N; i++)
-    {
-        result[i] =
-            alpha * v1[i] +
-            beta * v2[i];
-    }
-
-    return result;
-}
-
-// concat
-template<typename T1, typename T2,
-         int N1, int N2>
-auto concat(const Vector<T1, N1>& a,
-            const Vector<T2, N2>& b)
-{
-    using ResultType = decltype(T1() + T2());
-
-    Vector<ResultType, N1 + N2> result;
-
-    for (int i = 0; i < N1; i++)
-    {
-        result[i] = a[i];
-    }
-
-    for (int i = 0; i < N2; i++)
-    {
-        result[N1 + i] = b[i];
-    }
-
-    return result;
-}
-
-int main()
-{
-    Vector<int, 5> v1;
-    Vector<double, 5> v2;
-
-    cout << "INPUT VECTOR V1" << endl;
+    cout << "\nEnter elements for v1:\n";
     v1.input();
 
-    cout << endl;
-
-    cout << "INPUT VECTOR V2" << endl;
-    v2.input();
-
-    cout << endl;
-
-    cout << "VECTOR V1" << endl;
+    cout << "\nv1 = ";
     v1.print();
 
-    cout << endl;
+    // Скаляр
+    int scalar;
 
-    cout << "VECTOR V2" << endl;
+    cout << "\nEnter scalar: ";
+    cin >> scalar;
+
+    auto sumScalar = v1 + scalar;
+
+    cout << "v1 + scalar = ";
+    sumScalar.print();
+
+    // Другий вектор
+    Vector<int> v2(n, 0);
+
+    cout << "\nEnter elements for v2:\n";
+    v2.input();
+
+    cout << "\nv2 = ";
     v2.print();
 
-    cout << endl;
+    // Додавання векторів
+    auto sumVectors = v1 + v2;
 
-    cout << "SUM" << endl;
-    auto sum = v1 + v2;
-    sum.print();
+    cout << "v1 + v2 = ";
+    sumVectors.print();
 
-    cout << endl;
+    // resize
+    auto bigger = v1.resize<10>();
 
-    cout << "SUBTRACTION" << endl;
-    auto sub = v1 - v2;
-    sub.print();
+    cout << "\nResize to 10:\n";
+    bigger.print();
 
-    cout << endl;
+    // convert
+    auto floatVector = v1.convert<float>();
 
-    cout << "MULTIPLY BY NUMBER" << endl;
-    auto multNum = v1 * 10;
-    multNum.print();
+    cout << "\nConvert to float:\n";
+    floatVector.print();
 
-    cout << endl;
+    // slice
+    auto sliced = v1.slice<0, 2>();
 
-    cout << "DIVIDE BY NUMBER" << endl;
-    auto divNum = v1 / 2;
-    divNum.print();
+    cout << "\nSlice <0,2>:\n";
+    sliced.print();
 
-    cout << endl;
+    // weighted sum
+    auto ws = Vector<int>::weightedSum(v1, 0.5, v2, 2.0);
 
-    cout << "ELEMENT MULTIPLICATION" << endl;
-    auto multVec = v1 * v2;
-    multVec.print();
-
-    cout << endl;
-
-    cout << "ELEMENT DIVISION" << endl;
-    auto divVec = v1 / v2;
-    divVec.print();
-
-    cout << endl;
-
-    cout << "NEGATIVE INDEX" << endl;
-    cout << v1[-1] << endl;
-
-    cout << endl;
-
-    cout << "RESIZE" << endl;
-    auto resized = v1.resize<8>();
-    resized.print();
-
-    cout << endl;
-
-    cout << "CONVERT TO FLOAT" << endl;
-    auto converted = v1.convert<float>();
-    converted.print();
-
-    cout << endl;
-
-    cout << "SLICE 1..3" << endl;
-    auto part1 = v1.slice<1, 3>();
-    part1.print();
-
-    cout << endl;
-
-    cout << "SLICE REVERSE" << endl;
-    auto part2 = v1.slice<4, 1>();
-    part2.print();
-
-    cout << endl;
-
-    cout << "WEIGHTED SUM" << endl;
-    auto ws = weighted_sum(v1, 0.7, v2, 3.2);
+    cout << "\nWeighted sum:\n";
     ws.print();
 
-    cout << endl;
+    // concat
+    auto combined = v1.concat(v2);
 
-    cout << "CONCAT" << endl;
-    auto joined = concat(v1, v2);
-    joined.print();
-
-    cout << endl;
+    cout << "\nConcatenation:\n";
+    combined.print();
 
     return 0;
 }
